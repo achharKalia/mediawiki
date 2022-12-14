@@ -1,0 +1,215 @@
+resource "kubernetes_manifest" "deployment_pod_a" {
+  manifest = {
+    "apiVersion" = "apps/v1"
+    "kind" = "Deployment"
+    "metadata" = {
+      "labels" = {
+        "app" = "mobiwiki"
+      }
+      "name" = "pod-A"
+    }
+    "spec" = {
+      "replicas" = 1
+      "selector" = {
+        "matchLabels" = {
+          "app" = "mobiwiki"
+        }
+      }
+      "template" = {
+        "metadata" = {
+          "labels" = {
+            "app" = "mobiwiki"
+          }
+        }
+        "spec" = {
+          "containers" = [
+            {
+              "image" = "mobiwiki:v2"
+              "name" = "mobiwiki"
+              "ports" = [
+                {
+                  "containerPort" = 80
+                },
+              ]
+              "resources" = {
+                "limits" = {
+                  "memory" = "400Mi"
+                }
+                "requests" = {
+                  "memory" = "200Mi"
+                }
+              }
+              "volumeMounts" = [
+                {
+                  "mountPath" = "/var/www/html/"
+                  "name" = "mobi-csv"
+                },
+              ]
+            },
+          ]
+          "initContainers" = [
+            {
+              "command" = [
+                "sh",
+                "-c",
+                "cd /opt; git clone https://github.com/achharKalia/mediawiki.git",
+              ]
+              "image" = "bitnami/git:latest"
+              "name" = "get-csv"
+            },
+          ]
+          "volumes" = [
+            {
+              "emptyDir" = {}
+              "name" = "mobi-csv"
+            },
+          ]
+        }
+      }
+    }
+  }
+}
+
+resource "kubernetes_manifest" "deployment_pod_b" {
+  manifest = {
+    "apiVersion" = "apps/v1"
+    "kind" = "Deployment"
+    "metadata" = {
+      "labels" = {
+        "app" = "mobiwiki"
+      }
+      "name" = "pod-B"
+    }
+    "spec" = {
+      "replicas" = 1
+      "selector" = {
+        "matchLabels" = {
+          "app" = "mobiwiki"
+        }
+      }
+      "template" = {
+        "metadata" = {
+          "labels" = {
+            "app" = "mobiwiki"
+          }
+        }
+        "spec" = {
+          "containers" = [
+            {
+              "image" = "mobiwiki:v2"
+              "name" = "mobiwiki"
+              "ports" = [
+                {
+                  "containerPort" = 80
+                },
+              ]
+              "resources" = {
+                "limits" = {
+                  "memory" = "200Mi"
+                }
+                "requests" = {
+                  "memory" = "200Mi"
+                }
+              }
+              "volumeMounts" = [
+                {
+                  "mountPath" = "/var/www/html/"
+                  "name" = "mobi-csv"
+                },
+              ]
+            },
+          ]
+          "initContainers" = [
+            {
+              "command" = [
+                "sh",
+                "-c",
+                "cd /opt; git clone https://github.com/achharKalia/mediawiki.git",
+              ]
+              "image" = "bitnami/git:latest"
+              "name" = "get-csv"
+            },
+          ]
+          "volumes" = [
+            {
+              "emptyDir" = {}
+              "name" = "mobi-csv"
+            },
+          ]
+        }
+      }
+    }
+  }
+}
+
+resource "kubernetes_manifest" "deployment_pod_c" {
+  manifest = {
+    "apiVersion" = "apps/v1"
+    "kind" = "Deployment"
+    "metadata" = {
+      "labels" = {
+        "app" = "mobiwiki"
+      }
+      "name" = "pod-C"
+    }
+    "spec" = {
+      "replicas" = 1
+      "selector" = {
+        "matchLabels" = {
+          "app" = "mobiwiki"
+        }
+      }
+      "template" = {
+        "metadata" = {
+          "labels" = {
+            "app" = "mobiwiki"
+          }
+        }
+        "spec" = {
+          "containers" = [
+            {
+              "image" = "mobiwiki:v2"
+              "name" = "mobiwiki"
+              "ports" = [
+                {
+                  "containerPort" = 80
+                },
+              ]
+              "resources" = {
+                "limits" = {
+                  "memory" = "400Mi"
+                }
+                "requests" = {
+                  "memory" = "200Mi"
+                }
+              }
+              "volumeMounts" = [
+                {
+                  "mountPath" = "/var/www/html/"
+                  "name" = "mobi-csv"
+                },
+              ]
+            },
+          ]
+          "initContainers" = [
+            {
+              "command" = [
+                "sh",
+                "-c",
+                "cd /opt; git clone https://github.com/achharKalia/mediawiki.git",
+              ]
+              "image" = "bitnami/git:latest"
+              "name" = "get-csv"
+            },
+          ]
+          "volumes" = [
+            {
+              "emptyDir" = {}
+              "name" = "mobi-csv"
+            },
+          ]
+        }
+      }
+    }
+  }
+}
