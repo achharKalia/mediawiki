@@ -1,0 +1,200 @@
+mkdir Terraform_ECS
+cd Terraform_ECS
+touch vpc.tf providers.tf security.tf variables.tf main.tf
+
+#This installs the provider for aws & docker
+terraform {
+  required_providers {
+    docker = {
+      source = "kreuzwerker/docker"
+
+    }
+    aws = {
+      source = "hashicorp/aws"
+
+    }
+  }
+}
+
+provider "docker" {}
+
+provider "aws" {
+  region = var.region
+}
+
+####We need a vpc and a minimum of two private subnets to build an ECS cluster
+
+vi vpc.tf
+# create vpc
+resource "aws_vpc" "vpc" {
+  cidr_block           = var.vpc_cidr
+  instance_tenancy     = "default"
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = "${var.project_name}-vpc"
+  }
+}
+# use data source to get all avalablility zones in region
+data "aws_availability_zones" "available_zones" {}
+
+# create private subnet az1
+resource "aws_subnet" "private_subnet_az1" {
+  vpc_id            = aws_vpc.vpc.id
+  cidr_block        = var.private_subnet1_az1_cidr
+  availability_zone = data.aws_availability_zones.available_zones.names[0]
+
+
+  tags = {
+    Name = "private subnet1"
+  }
+}
+
+# create private subnet az2
+resource "aws_subnet" "private_subnet_az2" {
+  vpc_id            = aws_vpc.vpc.id
+  cidr_block        = var.private_subnet2_az2_cidr
+  availability_zone = data.aws_availability_zones.available_zones.names[1]
+
+
+  tags = {
+    Name = "private subnet2"
+  }
+}  
+
+#####Copy and paste the following code into your security.tf
+# create security group for the application load balancer
+
+resource "aws_security_group" "ecs_security_group" {
+  
+  name        = "security group"
+  description = "enable http access on port 80"
+  vpc_id      = aws_vpc.vpc.id
+
+
+  ingress {
+    description = "http access"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "ecs_sg"
+  }
+}
+
+#This adds the security group rule to the fargate service
+
+resource "aws_security_group_rule" "task_ingress_80" {
+  security_group_id        = module.ecs-fargate.service_sg_id
+  type                     = "ingress"
+  protocol                 = "tcp"
+  from_port                = 80
+  to_port                  = 80
+  source_security_group_id = aws_security_group.ecs_security_group.id
+  }
+  
+####Create an ECS cluster by adding the following code in main.tf
+
+resource "aws_ecs_cluster" "cluster" {
+  name = "${var.name_prefix}-cluster"
+}
+
+resource "aws_ecs_cluster_capacity_providers" "cluster" {
+  cluster_name = aws_ecs_cluster.cluster.name
+
+  capacity_providers = ["FARGATE_SPOT", "FARGATE"]
+
+  default_capacity_provider_strategy {
+    capacity_provider = "FARGATE_SPOT"
+  }
+}
+
+############Push the App to AWS ECR###########################
+
+resource "aws_ecr_repository" "my_first_ecr_repo" {
+  name = "my-first-ecr-repo" # Naming my repository
+}
+
+##############################################################
+module "ecs-fargate" {
+  source = "umotif-public/ecs-fargate/aws"
+
+  name_prefix        = "${var.name_prefix}-fargate"
+  vpc_id             = aws_vpc.vpc.id
+  private_subnet_ids = [aws_subnet.private_subnet_az1.id, aws_subnet.private_subnet_az2.id]
+  cluster_id         = aws_ecs_cluster.cluster.id
+
+  task_container_image = "centos"
+  task_container_assign_public_ip = true
+  task_container_port = 80
+  task_definition_cpu    = 256
+  task_definition_memory = 400
+  load_balanced = false
+  
+  health_check = {
+    port = "traffic-port"
+    path = "/"
+  }
+
+  tags = {
+    Environment = "mediwiki"
+    Project     = "test"
+
+  }
+}
+
+###Copy and paste the following code into your variables.tf 
+
+variable "region" {
+  description = "name region"
+  default     = "Mumbai"
+}
+
+variable "vpc_cidr" {
+  type        = string
+  description = "This configures the vpc cidr"
+  default     = "10.0.0.0/16"
+}
+
+variable "project_name" {
+  type        = string
+  description = "This configures the project name"
+  default     = "ecs-fargate"
+}
+
+variable "private_subnet1_az1_cidr" {
+  type        = string
+  description = "This configures the private subnet1 cidr"
+  default     = "10.0.1.0/24"
+}
+
+variable "private_subnet2_az2_cidr" {
+  type        = string
+  description = "This configures the private subnet2 cidr"
+  default     = "10.0.2.0/24"
+}
+
+variable "name_prefix" {
+  type        = string
+  description = "This configures a name variable to name other resources"
+  default     = "mediawiki-test"
+}
+
+#####################################################################################
+
+###############################################################################
+terraform init
+terraform validate
+Terraform plan
+Terraform apply --auto-approve
+
