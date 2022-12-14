@@ -1,0 +1,6 @@
+FROM php:7.4.33-apache
+RUN apt-get update && apt-get install -y zlib1g-dev libicu-dev g++ libpq-dev
+RUN docker-php-ext-configure intl && docker-php-ext-install intl
+WORKDIR /var/www/html/
+ADD https://releases.wikimedia.org/mediawiki/1.39/mediawiki-1.39.0.tar.gz /var/www/html/
+RUN tar xfz mediawiki-1.39.0.tar.gz && mv mediawiki-1.39.0/* . && rm -rf mediawiki-1.39.0 && rm -rf mediawiki-1.39.0.tar.gz

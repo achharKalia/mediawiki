@@ -1,0 +1,122 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-A
+  labels:
+    app: mobiwiki
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mobiwiki
+  template:
+    metadata:
+      labels:
+        app: mobiwiki
+    spec:
+      initContainers:
+      - name: get-csv
+        image: bitnami/git:latest
+        command: ['sh', '-c', "cd /opt; git clone https://github.com/achharKalia/mediawiki.git"]
+      containers:
+        volumeMounts:
+        - mountPath: /opt/
+          name: mobi-csv
+      containers:
+      - name: mobiwiki
+        image: mobiwiki:v2
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "200Mi"
+          limits:
+            memory: "400Mi"
+        volumeMounts:
+        - mountPath: /var/www/html/
+          name: mobi-csv
+      volumes:
+      - name: mobi-csv
+        emptyDir: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-B
+  labels:
+    app: mobiwiki
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mobiwiki
+  template:
+    metadata:
+      labels:
+        app: mobiwiki
+    spec:
+      initContainers:
+      - name: get-csv
+        image: bitnami/git:latest
+        command: ['sh', '-c', "cd /opt; git clone https://github.com/achharKalia/mediawiki.git"]
+      containers:
+        volumeMounts:
+        - mountPath: /opt/
+          name: mobi-csv
+      containers:
+      - name: mobiwiki
+        image: mobiwiki:v2
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "200Mi"
+          limits:
+            memory: "200Mi"
+        volumeMounts:
+        - mountPath: /var/www/html/
+          name: mobi-csv
+      volumes:
+      - name: mobi-csv
+        emptyDir: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-C
+  labels:
+    app: mobiwiki
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mobiwiki
+  template:
+    metadata:
+      labels:
+        app: mobiwiki
+    spec:
+      initContainers:
+      - name: get-csv
+        image: bitnami/git:latest
+        command: ['sh', '-c', "cd /opt; git clone https://github.com/achharKalia/mediawiki.git"]
+      containers:
+        volumeMounts:
+        - mountPath: /opt/
+          name: mobi-csv
+      containers:
+      - name: mobiwiki
+        image: mobiwiki:v2
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "200Mi"
+          limits:
+            memory: "400Mi"
+        volumeMounts:
+        - mountPath: /var/www/html/
+          name: mobi-csv
+      volumes:
+      - name: mobi-csv
+        emptyDir: {}
